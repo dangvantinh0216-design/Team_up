@@ -18,7 +18,7 @@ export default function KanbanBoard({ projectId, userId }: { projectId: string, 
     const channel = supabase
       .channel('schema-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `project_id=eq.${projectId}` }, () => {
-        fetchTasks(); // Simplest way: re-fetch on any change
+        fetchTasks();
       })
       .subscribe();
 
@@ -53,6 +53,15 @@ export default function KanbanBoard({ projectId, userId }: { projectId: string, 
       // Show reward UI
       setRewardMsg("+5 Điểm Uy Tín! 🌟");
       setTimeout(() => setRewardMsg(null), 3000);
+
+      // Create notification for self
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        actor_id: userId,
+        type: 'score',
+        content: `Bạn vừa được cộng +5 điểm Uy tín cho việc hoàn thành task! 🚀`,
+        project_id: projectId
+      });
 
       // Increment reliability score in profiles
       const { data: profile } = await supabase.from('profiles').select('reliability_score').eq('id', userId).single();

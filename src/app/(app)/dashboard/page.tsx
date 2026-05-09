@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { calculateMatchScore, UserProfile, ProjectData } from "@/utils/matchingAlgorithm";
+import DashboardContent from "@/components/dashboard/DashboardContent";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,17 +13,36 @@ export default async function DashboardPage() {
   // 1. Fetch user's profile
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
-  // 1.5 Fetch user's own projects
+  // 1.5 Fetch user's own projects (Owner)
   const { data: myProjects } = await supabase.from('projects').select('*').eq('owner_id', user.id);
 
-  // 2. Fetch all projects (we exclude user's own projects from recommendations)
+  // 1.7 Fetch projects where user is an approved member
+  const { data: memberships } = await supabase
+    .from('project_members')
+    .select('project_id, status, projects(*)')
+    .eq('user_id', user.id);
+
+  const approvedMemberProjects = (memberships || [])
+    .filter(m => m.status === 'approved' && m.projects)
+    .map(m => m.projects);
+
+  const allMyWorkspaces = [
+    ...(myProjects || []).map(p => ({ ...p, role: 'Owner' })),
+    ...approvedMemberProjects.map(p => ({ ...p, role: 'Member' }))
+  ];
+
+  // 2. Fetch all projects (exclude user's own projects)
   const { data: allProjects } = await supabase.from('projects').select('*').neq('owner_id', user.id);
 
-  // 3. Run Matching Algorithm
-  const matchedProjects = (allProjects || []).map((project: ProjectData & { id: string, title: string }) => {
+  // 3. Fetch all other profiles for search
+  const { data: allProfiles } = await supabase.from('profiles').select('*').neq('id', user.id);
+
+  // 4. Run Matching Algorithm for projects
+  const matchedProjects = (allProjects || []).map((project: ProjectData & { id: string, title: string, owner_id: string }) => {
     const score = calculateMatchScore(profile as UserProfile | null, project as ProjectData);
-    return { ...project, matchScore: score };
-  }).sort((a, b) => b.matchScore - a.matchScore); // Sắp xếp điểm cao lên đầu
+    const membership = (memberships || []).find(m => m.project_id === project.id);
+    return { ...project, matchScore: score, membershipStatus: membership?.status || null };
+  }).sort((a, b) => b.matchScore - a.matchScore);
 
   const profileComplete = !!profile?.skills;
 
@@ -34,7 +54,7 @@ export default async function DashboardPage() {
         <p style={{ color: "var(--color-text-secondary)" }}>Ready to build something amazing today?</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "var(--spacing-xl)", alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "var(--spacing-2xl)", alignItems: "start" }}>
         
         {/* Left Column: Profile & My Workspaces */}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-lg)" }}>
@@ -43,7 +63,7 @@ export default async function DashboardPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)", marginBottom: "var(--spacing-lg)" }}>
               <p><strong>Reliability Score:</strong> <span style={{ color: "var(--color-success)" }}>{profile?.reliability_score || 100}</span></p>
               <p><strong>Skills:</strong> <span style={{ color: "var(--color-text-secondary)" }}>{profile?.skills || "Not set yet"}</span></p>
-              <p><strong>Vibe:</strong> <span style={{ color: "var(--color-text-secondary)", fontSize: "0.9rem" }}>{profile?.work_style ? profile.work_style.substring(0, 50) + "..." : "Not set yet"}</span></p>
+              <p><strong>Vibe:</strong> <span style={{ color: "var(--color-text-secondary)", fontSize: "0.9rem" }}>{profile?.work_style ? (profile.work_style.length > 50 ? profile.work_style.substring(0, 50) + "..." : profile.work_style) : "Not set yet"}</span></p>
             </div>
             <a href="/profile" className="btn btn-outline" style={{ width: "100%", textAlign: "center" }}>
               {profileComplete ? "Edit Profile" : "Complete Profile"}
@@ -53,12 +73,15 @@ export default async function DashboardPage() {
           <div className="glass-panel" style={{ padding: "var(--spacing-lg)" }}>
             <h3 style={{ marginBottom: "var(--spacing-md)" }}>My Workspaces</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
-              {(!myProjects || myProjects.length === 0) ? (
-                 <p style={{ color: "var(--color-text-secondary)", fontSize: "0.9rem" }}>No projects yet.</p>
+              {allMyWorkspaces.length === 0 ? (
+                 <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem" }}>No projects yet.</p>
               ) : (
-                myProjects.map((p: { id: string, title: string }) => (
-                  <a key={p.id} href={`/workspace/${p.id}`} className="btn btn-outline" style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", width: "100%", fontSize: "0.9rem", color: "var(--color-text-primary)", borderColor: "rgba(255,255,255,0.1)" }}>
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</span>
+                allMyWorkspaces.map((p) => (
+                  <a key={p.id} href={`/workspace/${p.id}`} className="btn btn-outline" style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", width: "100%", fontSize: "0.9rem", color: "var(--color-text-primary)", borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px" }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: "600" }}>{p.title}</span>
+                      <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{p.role}</span>
+                    </div>
                     <span>→</span>
                   </a>
                 ))
@@ -67,57 +90,14 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Right Column: Project Feed */}
+        {/* Right Column: Dashboard Tabs (Projects / Teammates) */}
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--spacing-md)" }}>
-            <h3>Recommended Projects</h3>
-            {!profileComplete && (
-              <span style={{ fontSize: "0.85rem", color: "var(--color-warning)" }}>Complete your profile for better AI matches!</span>
-            )}
-          </div>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-md)" }}>
-            
-            {matchedProjects.length === 0 ? (
-              <div className="glass-panel" style={{ padding: "var(--spacing-xl)", textAlign: "center", color: "var(--color-text-secondary)" }}>
-                No projects found. Be the first to post a project!
-              </div>
-            ) : (
-              matchedProjects.map(p => (
-                <div key={p.id} className="glass-panel" style={{ padding: "var(--spacing-lg)", transition: "transform var(--transition-fast)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--spacing-xs)" }}>
-                    <h4 style={{ color: "var(--color-brand-primary)", margin: 0 }}>{p.title}</h4>
-                    {/* Badge AI Match Score */}
-                    <div style={{ 
-                      backgroundColor: p.matchScore >= 80 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                      color: p.matchScore >= 80 ? 'var(--color-success)' : 'var(--color-warning)',
-                      padding: "4px 8px", borderRadius: "var(--radius-full)", fontSize: "0.8rem", fontWeight: "bold",
-                      border: `1px solid ${p.matchScore >= 80 ? 'var(--color-success)' : 'var(--color-warning)'}`
-                    }}>
-                      {p.matchScore}% Match
-                    </div>
-                  </div>
-                  
-                  <p style={{ color: "var(--color-text-secondary)", marginBottom: "var(--spacing-md)", fontSize: "0.95rem" }}>
-                    {p.description}
-                  </p>
-                  
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", gap: "var(--spacing-sm)", flexWrap: "wrap" }}>
-                      <span style={{ fontSize: "0.8rem", backgroundColor: "rgba(255,255,255,0.05)", padding: "4px 8px", borderRadius: "4px" }}>
-                        Tech: {p.tech_stack}
-                      </span>
-                      <span style={{ fontSize: "0.8rem", backgroundColor: "rgba(255,255,255,0.05)", padding: "4px 8px", borderRadius: "4px" }}>
-                        Looking for: {p.roles_needed}
-                      </span>
-                    </div>
-                    <button className="btn btn-primary" style={{ padding: "6px 16px", fontSize: "0.85rem" }}>Apply</button>
-                  </div>
-                </div>
-              ))
-            )}
-
-          </div>
+          <DashboardContent 
+            matchedProjects={matchedProjects} 
+            allProfiles={allProfiles || []} 
+            userId={user.id}
+            profileComplete={profileComplete}
+          />
         </div>
 
       </div>

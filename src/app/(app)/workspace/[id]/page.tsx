@@ -1,9 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import KanbanBoard from "@/components/workspace/KanbanBoard";
-import TeamChat from "@/components/workspace/TeamChat";
 import GitHubLinker from "@/components/workspace/GitHubLinker";
-import GitHubFeed from "@/components/workspace/GitHubFeed";
+import WorkspaceSidebar from "@/components/workspace/WorkspaceSidebar";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +18,36 @@ export default async function WorkspacePage({ params }: { params: { id: string }
   if (!project) {
     return <div className="container" style={{ paddingTop: "var(--spacing-xl)", textAlign: "center" }}>Project not found.</div>;
   }
+
+  const isOwner = project.owner_id === user.id;
+
+  // Check membership if not owner
+  let isApprovedMember = isOwner;
+  if (!isOwner) {
+    const { data: membership } = await supabase
+      .from('project_members')
+      .select('status')
+      .eq('project_id', params.id)
+      .eq('user_id', user.id)
+      .eq('status', 'approved')
+      .single();
+    
+    if (membership) isApprovedMember = true;
+  }
+
+  if (!isApprovedMember) {
+    return (
+      <div className="container" style={{ paddingTop: "var(--spacing-xl)", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--spacing-md)" }}>
+        <div className="glass-panel" style={{ padding: "var(--spacing-xl)", maxWidth: "500px" }}>
+          <h2 style={{ color: "var(--color-danger)", marginBottom: "var(--spacing-sm)" }}>Access Denied 🔒</h2>
+          <p style={{ color: "var(--color-text-secondary)", marginBottom: "var(--spacing-lg)" }}>
+            Bạn cần được chủ dự án phê duyệt để tham gia vào không gian làm việc này. Hãy quay lại Dashboard và bấm nút <strong>Apply</strong> nếu bạn chưa làm vậy.
+          </p>
+          <a href="/dashboard" className="btn btn-primary">Back to Dashboard</a>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="animate-fade-in" style={{ paddingTop: "var(--spacing-md)", height: "calc(100vh - 100px)", display: "flex", flexDirection: "column" }}>
@@ -29,9 +58,9 @@ export default async function WorkspacePage({ params }: { params: { id: string }
           <p style={{ color: "var(--color-text-secondary)", fontSize: "0.9rem", margin: 0, maxWidth: "600px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{project.description}</p>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
-          <GitHubLinker projectId={project.id} currentRepo={project.github_repo} />
+          {isOwner && <GitHubLinker projectId={project.id} currentRepo={project.github_repo} />}
           <span style={{ fontSize: "0.75rem", backgroundColor: "rgba(99, 102, 241, 0.1)", color: "var(--color-brand-primary)", padding: "2px 10px", borderRadius: "100px" }}>
-            Live Sync Enabled
+            {isOwner ? "Project Owner" : "Member Mode"} • Live Sync Enabled
           </span>
         </div>
       </div>
@@ -40,11 +69,13 @@ export default async function WorkspacePage({ params }: { params: { id: string }
         <div style={{ minWidth: 0, overflow: "hidden" }}>
           <KanbanBoard projectId={project.id} userId={user.id} />
         </div>
-        <div style={{ minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <div style={{ flex: 1, overflow: "hidden" }}>
-            <TeamChat projectId={project.id} userId={user.id} />
-          </div>
-          <GitHubFeed repoUrl={project.github_repo} />
+        <div style={{ minWidth: 0, overflow: "hidden" }}>
+          <WorkspaceSidebar 
+            projectId={project.id} 
+            userId={user.id} 
+            githubRepo={project.github_repo} 
+            isOwner={isOwner} 
+          />
         </div>
       </div>
 

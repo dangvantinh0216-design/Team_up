@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TeamUp | Find Your Perfect Squad 🚀
 
-## Getting Started
+The ultimate platform for developers and students to find teammates, manage projects, and build amazing products together.
 
-First, run the development server:
+## ✨ Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **🤖 AI-Powered Matching:** Intelligent algorithm that matches you with projects based on your skills and work style.
+- **🔔 Real-time Notifications:** Never miss an update with our real-time bell notification system for applications, approvals, and points.
+- **📋 Member Management:** Project owners can review applicant profiles and manage their team directly from the workspace.
+- **💬 Integrated Team Chat:** Real-time messaging for seamless team collaboration.
+- **📈 Reliability Score:** Gamified productivity system that rewards task completion.
+- **🌐 Public Portfolios:** Professional profiles showcasing your skills and project history.
+- **🔍 Teammate Discovery:** Search and connect with other developers on the platform.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
+- **Database & Auth:** [Supabase](https://supabase.com/)
+- **Styling:** Vanilla CSS (Modern Design System)
+- **Real-time:** Supabase Realtime (Postgres Changes)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Getting Started
 
-## Learn More
+1. **Clone the repo:**
+   ```bash
+   git clone https://github.com/TwinMindWeekly/09_05_2026_Team_up.git
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Set up environment variables:**
+   Create a `.env.local` file with your Supabase credentials.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
 
-## Deploy on Vercel
+## 📄 License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

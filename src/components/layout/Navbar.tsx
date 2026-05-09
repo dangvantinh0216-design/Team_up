@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const router = useRouter();
@@ -55,7 +56,8 @@ export default function Navbar() {
         })}
       </div>
 
-      <div>
+      <div style={{ display: "flex", gap: "var(--spacing-md)", alignItems: "center" }}>
+        <NotificationBell />
         <button onClick={handleLogout} className="btn btn-outline" style={{ padding: "var(--spacing-xs) var(--spacing-md)", fontSize: "0.875rem" }}>
           Log Out
         </button>

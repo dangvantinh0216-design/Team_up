@@ -87,7 +87,7 @@ export default function TeamChat({ projectId, userId }: { projectId: string, use
         <input 
           type="text" className="input-field" 
           placeholder="Type a message..." 
-          style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, border: "none", background: "rgba(255,255,255,0.03)" }}
+          style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, border: "none", background: "rgba(255,255,255,0.03)", padding: "10px 15px", height: "40px" }}
           value={newMessage} onChange={e => setNewMessage(e.target.value)}
         />
         <button type="submit" className="btn btn-primary" style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}>Send</button>
