@@ -12,13 +12,17 @@ type Applicant = {
   profiles: { full_name: string, skills: string };
 };
 
-export default function MemberManager({ projectId }: { projectId: string }) {
+export default function MemberManager({ projectId, isOwner }: { projectId: string, isOwner: boolean }) {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const supabase = createClient();
   const { showToast } = useToast();
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
     fetchApplicants();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
@@ -42,7 +46,7 @@ export default function MemberManager({ projectId }: { projectId: string }) {
     if (!error) {
       await supabase.from('notifications').insert({
         user_id: userId,
-        actor_id: (await supabase.auth.getUser()).data.user?.id,
+        actor_id: currentUserId,
         type: 'approval',
         content: `Đơn ứng tuyển của bạn đã được ${newStatus === 'approved' ? 'chấp nhận' : 'từ chối'}.`,
         project_id: projectId
@@ -50,6 +54,23 @@ export default function MemberManager({ projectId }: { projectId: string }) {
 
       showToast(`Đã ${newStatus === 'approved' ? 'chấp nhận' : 'từ chối'} thành viên!`, "info");
       fetchApplicants();
+    }
+  };
+
+  const handleRemoveMember = async (applicationId: string, fullName: string) => {
+    const confirmed = confirm(`Bạn có chắc chắn muốn xóa ${fullName} khỏi dự án?`);
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from('project_members')
+      .delete()
+      .eq('id', applicationId);
+
+    if (!error) {
+      showToast(`Đã xóa thành viên ${fullName} khỏi dự án.`, "success");
+      fetchApplicants();
+    } else {
+      showToast("Lỗi khi xóa thành viên.", "error");
     }
   };
 
@@ -62,44 +83,62 @@ export default function MemberManager({ projectId }: { projectId: string }) {
     <div className="glass-panel" style={{ padding: "var(--spacing-lg)" }}>
       <h3 style={{ marginBottom: "var(--spacing-lg)" }}>Team Management</h3>
 
-      <div style={{ marginBottom: "var(--spacing-xl)" }}>
-        <h4 style={{ fontSize: "0.9rem", color: "var(--color-warning)", textTransform: "uppercase" }}>Applications ({pending.length})</h4>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
-          {pending.length === 0 ? (
-            <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem" }}>No pending applications.</p>
-          ) : (
-            pending.map(a => (
-              <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "1rem", color: "var(--color-brand-primary)" }}>
-                    {a.profiles.full_name}
-                  </Link>
-                  <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>{a.profiles.skills}</p>
+      {isOwner && (
+        <div style={{ marginBottom: "var(--spacing-xl)" }}>
+          <h4 style={{ fontSize: "0.9rem", color: "var(--color-warning)", textTransform: "uppercase" }}>Applications ({pending.length})</h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
+            {pending.length === 0 ? (
+              <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem" }}>No pending applications.</p>
+            ) : (
+              pending.map(a => (
+                <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "1rem", color: "var(--color-brand-primary)" }}>
+                      {a.profiles.full_name}
+                    </Link>
+                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>{a.profiles.skills}</p>
+                  </div>
+                  <div style={{ display: "flex", gap: "var(--spacing-xs)" }}>
+                    <button onClick={() => handleAction(a.id, a.user_id, 'approved')} className="btn btn-primary" style={{ padding: "4px 12px", fontSize: "0.8rem" }}>Approve</button>
+                    <button onClick={() => handleAction(a.id, a.user_id, 'rejected')} className="btn btn-outline" style={{ padding: "4px 12px", fontSize: "0.8rem", color: "var(--color-danger)" }}>Reject</button>
+                  </div>
                 </div>
-                <div style={{ display: "flex", gap: "var(--spacing-xs)" }}>
-                  <button onClick={() => handleAction(a.id, a.user_id, 'approved')} className="btn btn-primary" style={{ padding: "4px 12px", fontSize: "0.8rem" }}>Approve</button>
-                  <button onClick={() => handleAction(a.id, a.user_id, 'rejected')} className="btn btn-outline" style={{ padding: "4px 12px", fontSize: "0.8rem", color: "var(--color-danger)" }}>Reject</button>
-                </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <h4 style={{ fontSize: "0.9rem", color: "var(--color-success)", textTransform: "uppercase" }}>Current Members ({members.length})</h4>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
           {members.map(a => (
-            <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--color-brand-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem" }}>
-                {a.profiles.full_name.charAt(0)}
+            <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--color-brand-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem" }}>
+                  {a.profiles.full_name.charAt(0)}
+                </div>
+                <div>
+                  <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--color-text-primary)" }}>
+                    {a.profiles.full_name}
+                  </Link>
+                  <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Member</p>
+                </div>
               </div>
-              <div>
-                <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--color-text-primary)" }}>
-                  {a.profiles.full_name}
-                </Link>
-                <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Member</p>
-              </div>
+              
+              {isOwner && a.user_id !== currentUserId && (
+                <button 
+                  onClick={() => handleRemoveMember(a.id, a.profiles.full_name)}
+                  style={{ 
+                    background: "none", border: "none", color: "var(--color-danger)", 
+                    cursor: "pointer", fontSize: "0.8rem", opacity: 0.6 
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.opacity = "1"}
+                  onMouseOut={(e) => e.currentTarget.style.opacity = "0.6"}
+                >
+                  Remove
+                </button>
+              )}
             </div>
           ))}
         </div>

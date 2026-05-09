@@ -35,10 +35,24 @@ export default function Navbar() {
       transform: "translateZ(0)"
     }}>
       
-      <div style={{ fontWeight: "bold", fontSize: "1.25rem" }}>
-        <Link href="/dashboard" style={{ color: "var(--color-text-primary)" }}>
-          Team<span className="text-gradient">Up</span>
-        </Link>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
+        {pathname !== "/dashboard" && pathname !== "/" && (
+          <button 
+            onClick={() => router.back()} 
+            className="btn btn-outline" 
+            style={{ 
+              padding: "4px 8px", fontSize: "0.8rem", borderRadius: "var(--radius-md)",
+              display: "flex", alignItems: "center", gap: "4px"
+            }}
+          >
+            ← Back
+          </button>
+        )}
+        <div style={{ fontWeight: "bold", fontSize: "1.25rem" }}>
+          <Link href="/dashboard" style={{ color: "var(--color-text-primary)" }}>
+            Team<span className="text-gradient">Up</span>
+          </Link>
+        </div>
       </div>
 
       <div style={{ display: "flex", gap: "var(--spacing-lg)", alignItems: "center" }}>

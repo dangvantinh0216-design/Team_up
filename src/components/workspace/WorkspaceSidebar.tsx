@@ -95,22 +95,20 @@ export default function WorkspaceSidebar({ projectId, userId, githubRepo, isOwne
         >
           🐙 GitHub
         </button>
-        {isOwner && (
-          <button 
-            onClick={() => setActiveTab('members')}
-            style={{ 
-              flex: 1, padding: "10px", border: "none", borderRadius: "var(--radius-md)", 
-              fontSize: "0.8rem", cursor: "pointer",
-              background: activeTab === 'members' ? 'var(--color-brand-primary)' : 'transparent',
-              color: activeTab === 'members' ? 'white' : 'var(--color-text-secondary)',
-              fontWeight: activeTab === 'members' ? '600' : '500',
-              transition: "all var(--transition-fast)",
-              whiteSpace: "nowrap"
-            }}
-          >
-            👥 Team
-          </button>
-        )}
+        <button 
+          onClick={() => setActiveTab('members')}
+          style={{ 
+            flex: 1, padding: "10px", border: "none", borderRadius: "var(--radius-md)", 
+            fontSize: "0.8rem", cursor: "pointer",
+            background: activeTab === 'members' ? 'var(--color-brand-primary)' : 'transparent',
+            color: activeTab === 'members' ? 'white' : 'var(--color-text-secondary)',
+            fontWeight: activeTab === 'members' ? '600' : '500',
+            transition: "all var(--transition-fast)",
+            whiteSpace: "nowrap"
+          }}
+        >
+          👥 Team
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -121,7 +119,7 @@ export default function WorkspaceSidebar({ projectId, userId, githubRepo, isOwne
             <GitHubFeed repoUrl={githubRepo} isFullHeight={true} />
           </div>
         )}
-        {activeTab === 'members' && isOwner && <MemberManager projectId={projectId} />}
+        {activeTab === 'members' && <MemberManager projectId={projectId} isOwner={isOwner} />}
       </div>
 
       {/* Admin Actions */}
