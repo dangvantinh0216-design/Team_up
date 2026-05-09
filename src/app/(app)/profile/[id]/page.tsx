@@ -37,7 +37,14 @@ export default async function PublicProfilePage({ params }: { params: { id: stri
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const allProjects: ProjectDisplay[] = [
     ...((ownedProjects as unknown as ProjectDisplay[]) || []).map(p => ({ id: p.id, title: p.title, description: p.description, role: 'Owner' })),
-    ...((memberships as unknown as any[]) || []).filter(m => m.projects).map(m => ({ id: m.projects.id, title: m.projects.title, description: m.projects.description, role: 'Member' }))
+    ...((memberships as unknown as { projects: ProjectDisplay | null }[]) || [])
+      .filter(m => m.projects)
+      .map(m => ({ 
+        id: m.projects!.id, 
+        title: m.projects!.title, 
+        description: m.projects!.description, 
+        role: 'Member' 
+      }))
   ];
 
   return (
