@@ -9,7 +9,7 @@ type Applicant = {
   id: string;
   user_id: string;
   status: string;
-  profiles: { full_name: string, skills: string };
+  profiles: { full_name: string, skills: string } | null;
 };
 
 type ProjectOwner = {
@@ -43,10 +43,10 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
       .eq('id', projectId)
       .single();
     
-    if (project && project.profiles) {
+    if (project) {
       setOwnerInfo({
         id: project.owner_id,
-        full_name: (project.profiles as unknown as { full_name: string }).full_name
+        full_name: (project.profiles as any)?.full_name || "Project Owner"
       });
     }
 
@@ -117,9 +117,9 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
                 <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "1rem", color: "var(--color-brand-primary)" }}>
-                      {a.profiles.full_name}
+                      {a.profiles?.full_name || "New Applicant"}
                     </Link>
-                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>{a.profiles.skills}</p>
+                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>{a.profiles?.skills || "No skills listed"}</p>
                   </div>
                   <div style={{ display: "flex", gap: "var(--spacing-xs)" }}>
                     <button onClick={() => handleAction(a.id, a.user_id, 'approved')} className="btn btn-primary" style={{ padding: "4px 12px", fontSize: "0.8rem" }}>Approve</button>
@@ -158,11 +158,11 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
             <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
                 <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--color-brand-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem" }}>
-                  {a.profiles.full_name.charAt(0)}
+                  {a.profiles?.full_name?.charAt(0) || "?"}
                 </div>
                 <div>
                   <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--color-text-primary)" }}>
-                    {a.profiles.full_name}
+                    {a.profiles?.full_name || "Team Member"}
                   </Link>
                   <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Member</p>
                 </div>
@@ -170,7 +170,7 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
               
               {isOwner && a.user_id !== currentUserId && (
                 <button 
-                  onClick={() => handleRemoveMember(a.id, a.profiles.full_name)}
+                  onClick={() => handleRemoveMember(a.id, a.profiles?.full_name || "Member")}
                   style={{ 
                     background: "none", border: "none", color: "var(--color-danger)", 
                     cursor: "pointer", fontSize: "0.8rem", opacity: 0.6 
