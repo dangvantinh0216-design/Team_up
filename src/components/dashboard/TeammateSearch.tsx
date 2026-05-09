@@ -40,7 +40,7 @@ export default function TeammateSearch({ profiles }: { profiles: Profile[] }) {
             <div style={{ fontSize: "3rem" }}>🔍</div>
             <h3 style={{ margin: 0 }}>No teammates found</h3>
             <p style={{ color: "var(--color-text-muted)", maxWidth: "400px" }}>
-              Try adjusting your search terms or look for common skills like "React" or "Python".
+              Try adjusting your search terms or look for common skills like &quot;React&quot; or &quot;Python&quot;.
             </p>
             <button onClick={() => setSearchTerm("")} className="btn btn-outline">Clear Search</button>
           </div>

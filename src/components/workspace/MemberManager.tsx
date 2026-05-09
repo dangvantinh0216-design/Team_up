@@ -29,7 +29,7 @@ export default function MemberManager({ projectId }: { projectId: string }) {
       .select('id, user_id, status, profiles(full_name, skills)')
       .eq('project_id', projectId);
     
-    if (data) setApplicants(data as any);
+    if (data) setApplicants(data as unknown as Applicant[]);
     setLoading(false);
   };
 

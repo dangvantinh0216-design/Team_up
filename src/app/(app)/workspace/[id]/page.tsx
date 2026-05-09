@@ -41,7 +41,7 @@ export default async function WorkspacePage({ params }: { params: { id: string }
         <div className="glass-panel" style={{ padding: "var(--spacing-xl)", maxWidth: "500px" }}>
           <h2 style={{ color: "var(--color-danger)", marginBottom: "var(--spacing-sm)" }}>Access Denied 🔒</h2>
           <p style={{ color: "var(--color-text-secondary)", marginBottom: "var(--spacing-lg)" }}>
-            Bạn cần được chủ dự án phê duyệt để tham gia vào không gian làm việc này. Hãy quay lại Dashboard và bấm nút <strong>Apply</strong> nếu bạn chưa làm vậy.
+            Bạn cần được chủ dự án phê duyệt để tham gia vào không gian làm việc này. Hãy quay lại Dashboard và bấm nút &quot;Apply&quot; nếu bạn chưa làm vậy.
           </p>
           <a href="/dashboard" className="btn btn-primary">Back to Dashboard</a>
         </div>

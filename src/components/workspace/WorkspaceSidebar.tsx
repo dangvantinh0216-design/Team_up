@@ -11,6 +11,7 @@ import MemberManager from "./MemberManager";
 export default function WorkspaceSidebar({ projectId, userId, githubRepo, isOwner }: { projectId: string, userId: string, githubRepo: string | null, isOwner: boolean }) {
   const [activeTab, setActiveTab] = useState<'chat' | 'github' | 'members'>('chat');
   const [isDeleting, setIsDeleting] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const router = useRouter();
   const supabase = createClient();
   const { showToast } = useToast();
@@ -51,7 +52,7 @@ export default function WorkspaceSidebar({ projectId, userId, githubRepo, isOwne
           window.location.replace('/dashboard');
         }, 1000);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Critical delete error:", err);
       showToast("Lỗi hệ thống nghiêm trọng khi xóa.", "error");
       setIsDeleting(false);

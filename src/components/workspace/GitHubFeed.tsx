@@ -73,6 +73,7 @@ export default function GitHubFeed({ repoUrl, isFullHeight = false }: { repoUrl:
           {commits.length === 0 && <p style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem" }}>No activity found.</p>}
           {commits.map(c => (
             <div key={c.sha} style={{ display: "flex", gap: "var(--spacing-sm)", alignItems: "flex-start", padding: "var(--spacing-xs) 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={c.author?.avatar_url} alt="" style={{ width: "20px", height: "20px", borderRadius: "50%" }} />
               <div style={{ minWidth: 0 }}>
                 <p style={{ fontSize: "0.85rem", margin: 0, fontWeight: "500", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.commit.message.split('\n')[0]}</p>
