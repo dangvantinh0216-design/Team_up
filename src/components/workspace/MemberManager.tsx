@@ -104,96 +104,104 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
   if (loading) return <div>Loading team...</div>;
 
   return (
-    <div className="glass-panel" style={{ padding: "var(--spacing-lg)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--spacing-lg)" }}>
+    <div className="glass-panel" style={{ 
+      padding: "var(--spacing-lg)", 
+      height: "100%", 
+      display: "flex", 
+      flexDirection: "column",
+      overflow: "hidden" // Parent doesn't scroll, child does
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--spacing-lg)", flexShrink: 0 }}>
         <h3 style={{ margin: 0 }}>Team Management</h3>
         <span style={{ fontSize: "0.7rem", opacity: 0.5 }}>DB Records: {applicants.length}</span>
       </div>
 
-      {isOwner && (
-        <div style={{ marginBottom: "var(--spacing-xl)" }}>
-          <h4 style={{ fontSize: "0.9rem", color: "var(--color-warning)", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--color-warning)" }}></span>
-            Pending Applications ({pending.length})
-          </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
-            {pending.length === 0 ? (
-              <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", padding: "var(--spacing-md)", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: "var(--radius-md)" }}>
-                No pending applications.
-              </p>
-            ) : (
-              pending.map(a => (
-                <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
-                  <div>
-                    <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "1rem", color: "var(--color-brand-primary)" }}>
-                      {a.profiles?.full_name || "New Applicant"}
-                    </Link>
-                    <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>{a.profiles?.skills || "No skills listed"}</p>
+      <div style={{ flex: 1, overflowY: "auto", paddingRight: "4px" }} className="custom-scrollbar">
+        {isOwner && (
+          <div style={{ marginBottom: "var(--spacing-xl)" }}>
+            <h4 style={{ fontSize: "0.9rem", color: "var(--color-warning)", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--color-warning)" }}></span>
+              Pending Applications ({pending.length})
+            </h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
+              {pending.length === 0 ? (
+                <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", padding: "var(--spacing-md)", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: "var(--radius-md)" }}>
+                  No pending applications.
+                </p>
+              ) : (
+                pending.map(a => (
+                  <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+                    <div>
+                      <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "1rem", color: "var(--color-brand-primary)" }}>
+                        {a.profiles?.full_name || "New Applicant"}
+                      </Link>
+                      <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>{a.profiles?.skills || "No skills listed"}</p>
+                    </div>
+                    <div style={{ display: "flex", gap: "var(--spacing-xs)" }}>
+                      <button onClick={() => handleAction(a.id, a.user_id, 'approved')} className="btn btn-primary" style={{ padding: "4px 12px", fontSize: "0.8rem" }}>Approve</button>
+                      <button onClick={() => handleAction(a.id, a.user_id, 'rejected')} className="btn btn-outline" style={{ padding: "4px 12px", fontSize: "0.8rem", color: "var(--color-danger)" }}>Reject</button>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: "var(--spacing-xs)" }}>
-                    <button onClick={() => handleAction(a.id, a.user_id, 'approved')} className="btn btn-primary" style={{ padding: "4px 12px", fontSize: "0.8rem" }}>Approve</button>
-                    <button onClick={() => handleAction(a.id, a.user_id, 'rejected')} className="btn btn-outline" style={{ padding: "4px 12px", fontSize: "0.8rem", color: "var(--color-danger)" }}>Reject</button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      <div>
-        <h4 style={{ fontSize: "0.9rem", color: "var(--color-success)", textTransform: "uppercase" }}>
-          Current Members ({members.length + (ownerInfo ? 1 : 0)})
-        </h4>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
-          
-          {/* Always show Owner first */}
-          {ownerInfo && (
-            <div className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(99, 102, 241, 0.05)", border: "1px solid rgba(99, 102, 241, 0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
-                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary))", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem", color: "white" }}>
-                  {ownerInfo.full_name.charAt(0)}
-                </div>
-                <div>
-                  <Link href={`/profile/${ownerInfo.id}`} style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--color-brand-primary)" }}>
-                    {ownerInfo.full_name}
-                  </Link>
-                  <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Project Owner 👑</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Show Approved Members */}
-          {members.map(a => (
-            <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
-                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--color-brand-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem" }}>
-                  {a.profiles?.full_name?.charAt(0) || "?"}
-                </div>
-                <div>
-                  <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--color-text-primary)" }}>
-                    {a.profiles?.full_name || "Team Member"}
-                  </Link>
-                  <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Member</p>
-                </div>
-              </div>
-              
-              {isOwner && a.user_id !== currentUserId && (
-                <button 
-                  onClick={() => handleRemoveMember(a.id, a.profiles?.full_name || "Member")}
-                  style={{ 
-                    background: "none", border: "none", color: "var(--color-danger)", 
-                    cursor: "pointer", fontSize: "0.8rem", opacity: 0.6 
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.opacity = "1"}
-                  onMouseOut={(e) => e.currentTarget.style.opacity = "0.6"}
-                >
-                  Remove
-                </button>
+                ))
               )}
             </div>
-          ))}
+          </div>
+        )}
+
+        <div>
+          <h4 style={{ fontSize: "0.9rem", color: "var(--color-success)", textTransform: "uppercase" }}>
+            Current Members ({members.length + (ownerInfo ? 1 : 0)})
+          </h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
+            
+            {/* Always show Owner first */}
+            {ownerInfo && (
+              <div className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(99, 102, 241, 0.05)", border: "1px solid rgba(99, 102, 241, 0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary))", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem", color: "white" }}>
+                    {ownerInfo.full_name.charAt(0)}
+                  </div>
+                  <div>
+                    <Link href={`/profile/${ownerInfo.id}`} style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--color-brand-primary)" }}>
+                      {ownerInfo.full_name}
+                    </Link>
+                    <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Project Owner 👑</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Show Approved Members */}
+            {members.map(a => (
+              <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--color-brand-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem" }}>
+                    {a.profiles?.full_name?.charAt(0) || "?"}
+                  </div>
+                  <div>
+                    <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--color-text-primary)" }}>
+                      {a.profiles?.full_name || "Team Member"}
+                    </Link>
+                    <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Member</p>
+                  </div>
+                </div>
+                
+                {isOwner && a.user_id !== currentUserId && (
+                  <button 
+                    onClick={() => handleRemoveMember(a.id, a.profiles?.full_name || "Member")}
+                    style={{ 
+                      background: "none", border: "none", color: "var(--color-danger)", 
+                      cursor: "pointer", fontSize: "0.8rem", opacity: 0.6 
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.opacity = "1"}
+                    onMouseOut={(e) => e.currentTarget.style.opacity = "0.6"}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
