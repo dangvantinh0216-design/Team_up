@@ -43,7 +43,7 @@ export function calculateMatchScore(profile: UserProfile | null, project: Projec
   const projectRoles = extractKeywords(project.roles_needed);
   const targetKeywords = new Set([...projectTech, ...projectRoles]);
   
-  let skillMatches: string[] = [];
+  const skillMatches: string[] = [];
   profileSkills.forEach(skill => {
     if (targetKeywords.has(skill)) skillMatches.push(skill);
   });

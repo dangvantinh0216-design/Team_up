@@ -68,7 +68,7 @@ export default function ReliabilityHistory({ userId }: { userId: string }) {
               fontStyle: "italic",
               color: "var(--color-text-secondary)"
             }}>
-              "{item.detailed_reason}"
+              &quot;{item.detailed_reason}&quot;
             </div>
           )}
         </div>
