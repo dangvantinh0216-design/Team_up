@@ -71,7 +71,7 @@ export default function RegisterPage() {
               marginBottom: "var(--spacing-lg)",
               border: "1px solid var(--color-success)"
             }}>
-              Registration successful! Please check your email to verify your account.
+              Đăng ký thành công! Chào mừng bạn đến với TeamUp. Bây giờ bạn có thể đăng nhập để bắt đầu dự án.
             </div>
             <Link href="/auth/login" className="btn btn-outline" style={{ width: "100%" }}>
               Go to Login
