@@ -30,7 +30,8 @@ export default function WorkspaceSidebar({ projectId, userId, githubRepo, isOwne
       .eq('id', projectId);
 
     if (error) {
-      showToast("Lỗi khi xóa dự án: " + error.message, "error");
+      console.error("Delete error:", error);
+      showToast(`Không thể xóa: ${error.message}. Hãy kiểm tra lại SQL Cascade.`, "error");
       setIsDeleting(false);
     } else {
       showToast("Đã xóa dự án thành công. Đang quay lại Dashboard...", "success");
