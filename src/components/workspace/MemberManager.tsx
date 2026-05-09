@@ -46,7 +46,7 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
     if (project) {
       setOwnerInfo({
         id: project.owner_id,
-        full_name: (project.profiles as unknown as { full_name: string })?.full_name || "Project Owner"
+        full_name: (project.profiles as any)?.full_name || "Project Owner"
       });
     }
 
@@ -98,23 +98,32 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
   };
 
   const pending = applicants.filter(a => a.status === 'pending');
-  const members = applicants.filter(a => a.status === 'approved');
+  // Exclude owner from members list to avoid duplicate display
+  const members = applicants.filter(a => a.status === 'approved' && a.user_id !== ownerInfo?.id);
 
   if (loading) return <div>Loading team...</div>;
 
   return (
     <div className="glass-panel" style={{ padding: "var(--spacing-lg)" }}>
-      <h3 style={{ marginBottom: "var(--spacing-lg)" }}>Team Management</h3>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--spacing-lg)" }}>
+        <h3 style={{ margin: 0 }}>Team Management</h3>
+        <span style={{ fontSize: "0.7rem", opacity: 0.5 }}>DB Records: {applicants.length}</span>
+      </div>
 
       {isOwner && (
         <div style={{ marginBottom: "var(--spacing-xl)" }}>
-          <h4 style={{ fontSize: "0.9rem", color: "var(--color-warning)", textTransform: "uppercase" }}>Applications ({pending.length})</h4>
+          <h4 style={{ fontSize: "0.9rem", color: "var(--color-warning)", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--color-warning)" }}></span>
+            Pending Applications ({pending.length})
+          </h4>
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
             {pending.length === 0 ? (
-              <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem" }}>No pending applications.</p>
+              <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem", padding: "var(--spacing-md)", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: "var(--radius-md)" }}>
+                No pending applications.
+              </p>
             ) : (
               pending.map(a => (
-                <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
                   <div>
                     <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "1rem", color: "var(--color-brand-primary)" }}>
                       {a.profiles?.full_name || "New Applicant"}
@@ -133,7 +142,9 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
       )}
 
       <div>
-        <h4 style={{ fontSize: "0.9rem", color: "var(--color-success)", textTransform: "uppercase" }}>Current Members ({members.length + (ownerInfo ? 1 : 0)})</h4>
+        <h4 style={{ fontSize: "0.9rem", color: "var(--color-success)", textTransform: "uppercase" }}>
+          Current Members ({members.length + (ownerInfo ? 1 : 0)})
+        </h4>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
           
           {/* Always show Owner first */}
