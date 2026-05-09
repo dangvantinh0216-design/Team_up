@@ -48,7 +48,7 @@ export default function Navbar() {
             ← Back
           </button>
         )}
-        <div style={{ fontWeight: "bold", fontSize: "1.25rem" }}>
+        <div style={{ fontWeight: "bold", fontSize: "1.25rem" }} className="hover-scale">
           <Link href="/dashboard" style={{ color: "var(--color-text-primary)" }}>
             Team<span className="text-gradient">Up</span>
           </Link>
@@ -62,9 +62,13 @@ export default function Navbar() {
             <Link 
               key={link.name} 
               href={link.path}
+              className="hover-glow"
               style={{ 
                 color: isActive ? "var(--color-brand-primary)" : "var(--color-text-secondary)",
-                fontWeight: isActive ? "600" : "500"
+                fontWeight: isActive ? "600" : "500",
+                padding: "4px 12px",
+                borderRadius: "var(--radius-full)",
+                transition: "all var(--transition-fast)"
               }}
             >
               {link.name}

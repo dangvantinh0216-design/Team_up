@@ -39,10 +39,10 @@ export default async function DashboardPage() {
 
   // 4. Run Matching Algorithm for projects
   const matchedProjects = (allProjects || []).map((project: ProjectData & { id: string, title: string, owner_id: string }) => {
-    const score = calculateMatchScore(profile as UserProfile | null, project as ProjectData);
+    const matchResult = calculateMatchScore(profile as UserProfile | null, project as ProjectData);
     const membership = (memberships || []).find(m => m.project_id === project.id);
-    return { ...project, matchScore: score, membershipStatus: membership?.status || null };
-  }).sort((a, b) => b.matchScore - a.matchScore);
+    return { ...project, matchResult, membershipStatus: membership?.status || null };
+  }).sort((a, b) => b.matchResult.score - a.matchResult.score);
 
   const profileComplete = !!profile?.skills;
 

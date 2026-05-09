@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/ToastContext";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 export default function ApplyButton({ projectId, userId, ownerId, initialStatus }: { projectId: string, userId: string, ownerId: string, initialStatus: string | null }) {
   const [status, setStatus] = useState<string | null>(initialStatus);
@@ -43,7 +44,7 @@ export default function ApplyButton({ projectId, userId, ownerId, initialStatus 
 
   if (status === 'approved') {
     return (
-      <a href={`/workspace/${projectId}`} className="btn btn-outline" style={{ padding: "6px 16px", fontSize: "0.85rem" }}>
+      <a href={`/workspace/${projectId}`} className="btn btn-outline hover-glow" style={{ padding: "6px 16px", fontSize: "0.85rem" }}>
         Go to Workspace
       </a>
     );
@@ -64,11 +65,11 @@ export default function ApplyButton({ projectId, userId, ownerId, initialStatus 
   return (
     <button 
       onClick={handleApply} 
-      className="btn btn-primary" 
-      style={{ padding: "6px 16px", fontSize: "0.85rem" }}
+      className={`btn btn-primary ${loading ? "" : "hover-scale"}`}
+      style={{ padding: "6px 16px", fontSize: "0.85rem", minWidth: "80px" }}
       disabled={loading}
     >
-      {loading ? "Applying..." : "Apply"}
+      {loading ? <LoadingSpinner size="sm" className="p-0" /> : "Apply"}
     </button>
   );
 }

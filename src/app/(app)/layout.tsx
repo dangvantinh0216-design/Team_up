@@ -1,4 +1,5 @@
 import Navbar from "@/components/layout/Navbar";
+import ScrollToTop from "@/components/ui/ScrollToTop";
 
 export default function AppLayout({
   children,
@@ -11,6 +12,7 @@ export default function AppLayout({
       <main className="container" style={{ flex: 1, paddingBottom: "var(--spacing-2xl)" }}>
         {children}
       </main>
+      <ScrollToTop />
     </div>
   );
 }

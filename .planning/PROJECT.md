@@ -30,7 +30,7 @@ TeamUp is an all-in-one team finding and project management workspace. Users bui
 - [x] Full Team Visibility (Public team list for all members).
 
 ### Active
-- [x] ALL CORE FEATURES COMPLETED 🚀
+- [ ] Phase 11: Micro-UX & Notifications Polish (Empty states, Scrollbars, Notification grouping).
 
 ### Out of Scope
 - [Mobile App] — Focus on responsive web app first for MVP.
@@ -44,7 +44,7 @@ TeamUp is an all-in-one team finding and project management workspace. Users bui
 | Custom AI Algorithm | Implemented as a weighted matching system. | COMPLETED |
 | Global Notifications | Integrated real-time toast and bell system. | COMPLETED |
 
-## [x] Phase 10: Enhanced Collaboration & UX Polish
-- **Goal:** Add navigation shortcuts, member removal, and full team visibility for members.
-- **Status:** COMPLETED ✅
+## [ ] Phase 11: Micro-UX & Notifications Polish
+- **Goal:** Improve UI/UX and enhance the notification system.
+- **Status:** IN PROGRESS 🏗️
 *Last updated: 2026-05-09*

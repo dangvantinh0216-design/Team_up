@@ -17,15 +17,22 @@ type ProjectOwner = {
   full_name: string;
 };
 
+import { createPortal } from "react-dom";
+import MemberPenaltyModal from "./MemberPenaltyModal";
+
 export default function MemberManager({ projectId, isOwner }: { projectId: string, isOwner: boolean }) {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [ownerInfo, setOwnerInfo] = useState<ProjectOwner | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [removingMember, setRemovingMember] = useState<{id: string, name: string, userId: string} | null>(null);
+  const [mounted, setMounted] = useState(false);
+  
   const supabase = createClient();
   const { showToast } = useToast();
 
   useEffect(() => {
+    setMounted(true);
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
@@ -44,9 +51,11 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
       .single();
     
     if (project) {
+      // Explicitly handle the joined profiles type
+      const profiles = project.profiles as unknown as { full_name: string } | null;
       setOwnerInfo({
         id: project.owner_id,
-        full_name: (project.profiles as unknown as { full_name: string })?.full_name || "Project Owner"
+        full_name: profiles?.full_name || "Project Owner"
       });
     }
 
@@ -56,7 +65,9 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
       .select('id, user_id, status, profiles(full_name, skills)')
       .eq('project_id', projectId);
     
-    if (data) setApplicants(data as unknown as Applicant[]);
+    if (data) {
+      setApplicants(data as unknown as Applicant[]);
+    }
     setLoading(false);
   };
 
@@ -71,34 +82,61 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
         user_id: userId,
         actor_id: currentUserId,
         type: 'approval',
-        content: `Đơn ứng tuyển của bạn đã được ${newStatus === 'approved' ? 'chấp nhận' : 'từ chối'}.`,
+        content: `Your application has been ${newStatus === 'approved' ? 'accepted' : 'rejected'}.`,
         project_id: projectId
       });
 
-      showToast(`Đã ${newStatus === 'approved' ? 'chấp nhận' : 'từ chối'} thành viên!`, "info");
+      showToast(`Member ${newStatus === 'approved' ? 'accepted' : 'rejected'}!`, "info");
       fetchData();
     }
   };
 
-  const handleRemoveMember = async (applicationId: string, fullName: string) => {
-    const confirmed = confirm(`Bạn có chắc chắn muốn xóa ${fullName} khỏi dự án?`);
-    if (!confirmed) return;
-
+  const handleRemoveMember = async (applicationId: string, userId: string, fullName: string, reason: string, detailedReason: string, penaltyPoints: number) => {
     const { error } = await supabase
       .from('project_members')
       .delete()
       .eq('id', applicationId);
 
     if (!error) {
-      showToast(`Đã xóa thành viên ${fullName} khỏi dự án.`, "success");
+      // Apply penalty and save history
+      if (penaltyPoints > 0) {
+        // 1. Get current score
+        const { data: profile } = await supabase.from('profiles').select('reliability_score').eq('id', userId).single();
+        const currentScore = profile?.reliability_score || 100;
+        const newScore = Math.max(0, currentScore - penaltyPoints);
+
+        // 2. Update profile score
+        await supabase.from('profiles').update({ reliability_score: newScore }).eq('id', userId);
+        
+        // 3. Save to history table
+        await supabase.from('reliability_history').insert({
+          user_id: userId,
+          project_id: projectId,
+          points_changed: -penaltyPoints,
+          reason: reason,
+          detailed_reason: detailedReason,
+          actor_id: currentUserId
+        });
+
+        // 4. Send notification
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          actor_id: currentUserId,
+          type: 'penalty',
+          content: `You have been removed from the project for: ${reason}. Penalty: -${penaltyPoints} reliability points.`,
+          project_id: projectId
+        });
+      }
+
+      showToast(`Removed ${fullName}. ${penaltyPoints > 0 ? `Penalty of ${penaltyPoints} points applied.` : ""}`, "success");
+      setRemovingMember(null);
       fetchData();
     } else {
-      showToast("Lỗi khi xóa thành viên.", "error");
+      showToast("Error removing member.", "error");
     }
   };
 
   const pending = applicants.filter(a => a.status === 'pending');
-  // Exclude owner from members list to avoid duplicate display
   const members = applicants.filter(a => a.status === 'approved' && a.user_id !== ownerInfo?.id);
 
   if (loading) return <div>Loading team...</div>;
@@ -188,7 +226,7 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
                 
                 {isOwner && a.user_id !== currentUserId && (
                   <button 
-                    onClick={() => handleRemoveMember(a.id, a.profiles?.full_name || "Member")}
+                    onClick={() => setRemovingMember({ id: a.id, name: a.profiles?.full_name || "Member", userId: a.user_id })}
                     style={{ 
                       background: "none", border: "none", color: "var(--color-danger)", 
                       cursor: "pointer", fontSize: "0.8rem", opacity: 0.6 
@@ -204,6 +242,18 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
           </div>
         </div>
       </div>
+
+      {mounted && removingMember && createPortal(
+        <MemberPenaltyModal 
+          isOpen={!!removingMember}
+          memberName={removingMember.name}
+          onClose={() => setRemovingMember(null)}
+          onConfirm={(reason, detailedReason, penalty) => 
+            handleRemoveMember(removingMember.id, removingMember.userId, removingMember.name, reason, detailedReason, penalty)
+          }
+        />,
+        document.body
+      )}
     </div>
   );
 }
