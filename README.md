@@ -6,7 +6,9 @@ The ultimate platform for developers and students to find teammates, manage proj
 
 - **🤖 AI-Powered Matching:** Intelligent algorithm that matches you with projects based on your skills and work style.
 - **🔔 Real-time Notifications:** Never miss an update with our real-time bell notification system for applications, approvals, and points.
-- **📋 Member Management:** Project owners can review applicant profiles and manage their team directly from the workspace.
+- **📋 Member Management:** Owners can approve applicants, while approved members can view their full team list.
+- **🚪 Team Control:** Project owners can remove members to manage team quality.
+- **⬅️ Enhanced Navigation:** Global back button and intuitive workspace layout.
 - **💬 Integrated Team Chat:** Real-time messaging for seamless team collaboration.
 - **📈 Reliability Score:** Gamified productivity system that rewards task completion.
 - **🌐 Public Portfolios:** Professional profiles showcasing your skills and project history.

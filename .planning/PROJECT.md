@@ -25,7 +25,9 @@ TeamUp is an all-in-one team finding and project management workspace. Users bui
 - [x] Reliability Score System (Points based on tasks done, commits, and peer reviews).
 - [x] Real-time Notifications (Applications, approvals, score rewards).
 - [x] Public Portfolio Pages (Professional showcase).
-- [x] Project Administration (Delete projects).
+- [x] Project Administration (Delete projects, Remove members).
+- [x] Navigation Enhancements (Global Back Button).
+- [x] Full Team Visibility (Public team list for all members).
 
 ### Active
 - [x] ALL CORE FEATURES COMPLETED 🚀
@@ -42,5 +44,7 @@ TeamUp is an all-in-one team finding and project management workspace. Users bui
 | Custom AI Algorithm | Implemented as a weighted matching system. | COMPLETED |
 | Global Notifications | Integrated real-time toast and bell system. | COMPLETED |
 
----
+## [x] Phase 10: Enhanced Collaboration & UX Polish
+- **Goal:** Add navigation shortcuts, member removal, and full team visibility for members.
+- **Status:** COMPLETED ✅
 *Last updated: 2026-05-09*
