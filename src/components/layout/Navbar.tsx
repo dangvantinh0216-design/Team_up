@@ -29,7 +29,10 @@ export default function Navbar() {
       alignItems: "center", 
       padding: "var(--spacing-md) var(--spacing-xl)",
       margin: "var(--spacing-md)",
-      borderRadius: "var(--radius-full)"
+      borderRadius: "var(--radius-full)",
+      position: "relative",
+      zIndex: 100,
+      transform: "translateZ(0)"
     }}>
       
       <div style={{ fontWeight: "bold", fontSize: "1.25rem" }}>

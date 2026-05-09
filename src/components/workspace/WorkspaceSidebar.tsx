@@ -16,27 +16,45 @@ export default function WorkspaceSidebar({ projectId, userId, githubRepo, isOwne
   const { showToast } = useToast();
 
   const handleDeleteProject = async () => {
-    const confirmed = confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN dự án này? Toàn bộ dữ liệu (Tasks, Chat, Thành viên) sẽ bị mất và không thể khôi phục.");
+    const confirmed = confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN dự án này? Toàn bộ dữ liệu sẽ bị mất.");
     
     if (!confirmed) return;
 
     setIsDeleting(true);
+    showToast("Đang thực hiện xóa toàn bộ dữ liệu dự án...", "info");
     
-    // Deleting the project (Supabase should handle CASCADE if configured, 
-    // but let's assume we need to be safe or just let RLS/Foreign keys work)
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', projectId);
+    try {
+      // 1. Xóa các bảng liên quan (Manual cleanup)
+      const tables = ['tasks', 'messages', 'notifications', 'project_members'];
+      for (const table of tables) {
+        const { error: tableErr } = await supabase.from(table).delete().eq('project_id', projectId);
+        if (tableErr) {
+          console.warn(`Warning deleting from ${table}:`, tableErr);
+          // Tiếp tục cố gắng xóa các bảng khác
+        }
+      }
+      
+      // 2. Xóa chính dự án
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
 
-    if (error) {
-      console.error("Delete error:", error);
-      showToast(`Không thể xóa: ${error.message}. Hãy kiểm tra lại SQL Cascade.`, "error");
+      if (error) {
+        console.error("Final project delete error:", error);
+        showToast(`Lỗi xóa dự án: ${error.message}`, "error");
+        setIsDeleting(false);
+      } else {
+        showToast("Dự án đã được xóa sạch hoàn toàn! ✅", "success");
+        // Ép buộc quay về Dashboard và xóa cache
+        setTimeout(() => {
+          window.location.replace('/dashboard');
+        }, 1000);
+      }
+    } catch (err: any) {
+      console.error("Critical delete error:", err);
+      showToast("Lỗi hệ thống nghiêm trọng khi xóa.", "error");
       setIsDeleting(false);
-    } else {
-      showToast("Đã xóa dự án thành công. Đang quay lại Dashboard...", "success");
-      router.push('/dashboard');
-      router.refresh();
     }
   };
 

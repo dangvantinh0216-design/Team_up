@@ -110,8 +110,8 @@ export default function NotificationBell() {
 
       {isOpen && (
         <div className="glass-panel animate-fade-in" style={{ 
-          position: "absolute", top: "120%", right: 0, width: "320px", 
-          maxHeight: "450px", overflowY: "auto", zIndex: 1000, 
+          position: "absolute", top: "calc(100% + 15px)", right: "-10px", width: "350px", 
+          maxHeight: "500px", overflowY: "auto", zIndex: 9999, 
           padding: "0", borderRadius: "var(--radius-lg)",
           boxShadow: "0 20px 50px rgba(0,0,0,0.6)", border: "1px solid var(--color-border)"
         }}>
