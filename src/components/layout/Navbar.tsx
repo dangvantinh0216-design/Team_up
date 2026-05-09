@@ -1,0 +1,66 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+
+export default function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
+
+  const navLinks = [
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "My Profile", path: "/profile" },
+    { name: "Post Project", path: "/projects/new" },
+  ];
+
+  return (
+    <nav className="glass-panel" style={{ 
+      display: "flex", 
+      justifyContent: "space-between", 
+      alignItems: "center", 
+      padding: "var(--spacing-md) var(--spacing-xl)",
+      margin: "var(--spacing-md)",
+      borderRadius: "var(--radius-full)"
+    }}>
+      
+      <div style={{ fontWeight: "bold", fontSize: "1.25rem" }}>
+        <Link href="/dashboard" style={{ color: "var(--color-text-primary)" }}>
+          Team<span className="text-gradient">Up</span>
+        </Link>
+      </div>
+
+      <div style={{ display: "flex", gap: "var(--spacing-lg)", alignItems: "center" }}>
+        {navLinks.map((link) => {
+          const isActive = pathname === link.path;
+          return (
+            <Link 
+              key={link.name} 
+              href={link.path}
+              style={{ 
+                color: isActive ? "var(--color-brand-primary)" : "var(--color-text-secondary)",
+                fontWeight: isActive ? "600" : "500"
+              }}
+            >
+              {link.name}
+            </Link>
+          );
+        })}
+      </div>
+
+      <div>
+        <button onClick={handleLogout} className="btn btn-outline" style={{ padding: "var(--spacing-xs) var(--spacing-md)", fontSize: "0.875rem" }}>
+          Log Out
+        </button>
+      </div>
+      
+    </nav>
+  );
+}
