@@ -15,17 +15,20 @@ TeamUp is an all-in-one team finding and project management workspace. Users bui
 ## Requirements
 
 ### Validated
-(None yet — ship to validate)
+- [x] Authentication (Login / Register).
+- [x] User Profiles (Skills, timezone, free time, work style, reliability score).
+- [x] Project Board (Post project ideas, roles needed, tech stack).
+- [x] Custom AI Matching Algorithm (Calculate match score based on profiles and project needs).
+- [x] Project Workspace (Kanban Board for tasks).
+- [x] Project Workspace (Team Chat using Supabase Realtime).
+- [x] Project Workspace (GitHub integration for tracking actual commit progress).
+- [x] Reliability Score System (Points based on tasks done, commits, and peer reviews).
+- [x] Real-time Notifications (Applications, approvals, score rewards).
+- [x] Public Portfolio Pages (Professional showcase).
+- [x] Project Administration (Delete projects).
 
 ### Active
-- [ ] Authentication (Login / Register).
-- [ ] User Profiles (Skills, timezone, free time, work style, reliability score).
-- [ ] Project Board (Post project ideas, roles needed, tech stack).
-- [ ] Custom AI Matching Algorithm (Calculate match score based on profiles and project needs).
-- [ ] Project Workspace (Kanban Board for tasks).
-- [ ] Project Workspace (Team Chat using Supabase Realtime).
-- [ ] Project Workspace (GitHub integration for tracking actual commit progress).
-- [ ] Reliability Score System (Points based on tasks done, commits, and peer reviews).
+- [x] ALL CORE FEATURES COMPLETED 🚀
 
 ### Out of Scope
 - [Mobile App] — Focus on responsive web app first for MVP.
@@ -34,9 +37,10 @@ TeamUp is an all-in-one team finding and project management workspace. Users bui
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Next.js + Supabase | Robust SSR and built-in Auth/Realtime DB ideal for Chat and Workspaces. | Pending |
-| Vanilla CSS | Maximum flexibility for unique UI/UX. | Pending |
-| Custom AI Algorithm | Start with self-written algorithm before relying entirely on third-party APIs. | Pending |
+| Next.js + Supabase | Robust SSR and built-in Auth/Realtime DB ideal for Chat and Workspaces. | COMPLETED |
+| Vanilla CSS | Maximum flexibility for unique UI/UX. | COMPLETED |
+| Custom AI Algorithm | Implemented as a weighted matching system. | COMPLETED |
+| Global Notifications | Integrated real-time toast and bell system. | COMPLETED |
 
 ---
-*Last updated: 2026-05-09 after initialization*
+*Last updated: 2026-05-09*

@@ -3,21 +3,25 @@
 ## Epic: TeamUp Platform
 
 ### Table Stakes (Required for viability)
-- [ ] Authentication (Login / Register) with Supabase.
-- [ ] User Profiles (Skills, timezone, free time, work style).
-- [ ] Basic Project Listing (Create projects and view feed).
-- [ ] Responsive Web UI (Vanilla CSS + Next.js).
+- [x] Authentication (Login / Register) with Supabase.
+- [x] User Profiles (Skills, timezone, free time, work style).
+- [x] Basic Project Listing (Create projects and view feed).
+- [x] Responsive Web UI (Vanilla CSS + Next.js).
+- [x] **Project Deletion:** Project owners can delete their own projects.
 
 ### Core Features (Differentiators)
-- [ ] Custom AI Matching Algorithm (Calculate compatibility based on skills & vibe).
-- [ ] Project Workspace - Kanban Board.
-- [ ] Project Workspace - Team Chat.
-- [ ] Project Workspace - GitHub Integration.
-- [ ] Reliability Score System (Points for tasks, commits, peer reviews).
+- [x] Custom AI Matching Algorithm (Calculate compatibility based on skills & vibe).
+- [x] Project Workspace - Kanban Board.
+- [x] Project Workspace - Team Chat.
+- [x] Project Workspace - GitHub Integration.
+- [x] Reliability Score System (Points for tasks, commits, peer reviews).
+- [x] Member Management (Apply/Approve workflow).
 
 ### Nice to Have (Future enhancements)
-- [ ] Notifications System (Email / In-app).
+- [x] Notifications System (In-app Bell + Real-time).
+- [x] Public Portfolio Pages.
+- [x] User Discovery & Search.
 - [ ] Advanced AI Team Dynamics Analytics.
 
 ---
-*Generated via /gsd-new-project auto mode*
+*Updated on 2026-05-09*
