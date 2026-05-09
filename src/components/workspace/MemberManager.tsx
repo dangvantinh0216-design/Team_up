@@ -46,7 +46,7 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
     if (project && project.profiles) {
       setOwnerInfo({
         id: project.owner_id,
-        full_name: (project.profiles as any).full_name
+        full_name: (project.profiles as unknown as { full_name: string }).full_name
       });
     }
 
