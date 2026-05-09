@@ -1,0 +1,113 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+
+type Task = { id: string, title: string, status: string, assigned_to: string, project_id: string, created_at: string };
+
+export default function KanbanBoard({ projectId, userId }: { projectId: string, userId: string }) {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchTasks();
+    
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `project_id=eq.${projectId}` }, () => {
+        fetchTasks(); // Simplest way: re-fetch on any change
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  const fetchTasks = async () => {
+    const { data } = await supabase.from('tasks').select('*').eq('project_id', projectId).order('created_at', { ascending: true });
+    if (data) setTasks(data);
+  };
+
+  const addTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim()) return;
+    
+    await supabase.from('tasks').insert({
+      project_id: projectId,
+      title: newTaskTitle,
+      status: 'todo',
+      assigned_to: userId
+    });
+    setNewTaskTitle("");
+  };
+
+  const updateTaskStatus = async (taskId: string, newStatus: string) => {
+    await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+  };
+
+  const deleteTask = async (taskId: string) => {
+    await supabase.from('tasks').delete().eq('id', taskId);
+  };
+
+  const columns = [
+    { id: 'todo', title: 'To Do' },
+    { id: 'in_progress', title: 'In Progress' },
+    { id: 'done', title: 'Done' }
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <form onSubmit={addTask} style={{ display: "flex", gap: "var(--spacing-sm)", marginBottom: "var(--spacing-md)" }}>
+        <input 
+          type="text" className="input-field" 
+          placeholder="New task... (e.g. Design Landing Page)" 
+          value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)}
+        />
+        <button type="submit" className="btn btn-primary" style={{ whiteSpace: "nowrap" }}>Add Task</button>
+      </form>
+
+      <div className="kanban-board">
+        {columns.map(col => (
+          <div key={col.id} className="kanban-col">
+            <div className="kanban-col-header">
+              {col.title}
+              <span style={{ fontSize: "0.8rem", background: "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "10px" }}>
+                {tasks.filter(t => t.status === col.id).length}
+              </span>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)", flex: 1, overflowY: "auto", paddingRight: "4px" }}>
+              {tasks.filter(t => t.status === col.id).map(task => (
+                <div key={task.id} className="kanban-card">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <p style={{ fontSize: "0.95rem", marginBottom: "var(--spacing-sm)", fontWeight: "500" }}>{task.title}</p>
+                    <button onClick={() => deleteTask(task.id)} style={{ background: "none", border: "none", color: "var(--color-text-muted)", cursor: "pointer", fontSize: "1.2rem", padding: "0 4px" }}>×</button>
+                  </div>
+                  
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: "var(--spacing-sm)" }}>
+                    {col.id === 'todo' && (
+                      <button onClick={() => updateTaskStatus(task.id, 'in_progress')} className="btn btn-outline" style={{ padding: "2px 10px", fontSize: "0.75rem", width: "100%" }}>Start</button>
+                    )}
+                    {col.id === 'in_progress' && (
+                      <>
+                        <button onClick={() => updateTaskStatus(task.id, 'todo')} className="btn btn-outline" style={{ padding: "2px 8px", fontSize: "0.75rem" }}>Back</button>
+                        <button onClick={() => updateTaskStatus(task.id, 'done')} className="btn btn-primary" style={{ padding: "2px 8px", fontSize: "0.75rem" }}>Complete</button>
+                      </>
+                    )}
+                    {col.id === 'done' && (
+                      <button onClick={() => updateTaskStatus(task.id, 'in_progress')} className="btn btn-outline" style={{ padding: "2px 10px", fontSize: "0.75rem", width: "100%" }}>Reopen</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

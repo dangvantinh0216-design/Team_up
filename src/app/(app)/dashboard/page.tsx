@@ -12,6 +12,9 @@ export default async function DashboardPage() {
   // 1. Fetch user's profile
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
+  // 1.5 Fetch user's own projects
+  const { data: myProjects } = await supabase.from('projects').select('*').eq('owner_id', user.id);
+
   // 2. Fetch all projects (we exclude user's own projects from recommendations)
   const { data: allProjects } = await supabase.from('projects').select('*').neq('owner_id', user.id);
 
@@ -33,17 +36,35 @@ export default async function DashboardPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "var(--spacing-xl)", alignItems: "start" }}>
         
-        {/* Left Column: Profile Summary */}
-        <div className="glass-panel" style={{ padding: "var(--spacing-lg)" }}>
-          <h3 style={{ marginBottom: "var(--spacing-md)" }}>Your Profile</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)", marginBottom: "var(--spacing-lg)" }}>
-            <p><strong>Reliability Score:</strong> <span style={{ color: "var(--color-success)" }}>{profile?.reliability_score || 100}</span></p>
-            <p><strong>Skills:</strong> <span style={{ color: "var(--color-text-secondary)" }}>{profile?.skills || "Not set yet"}</span></p>
-            <p><strong>Vibe:</strong> <span style={{ color: "var(--color-text-secondary)", fontSize: "0.9rem" }}>{profile?.work_style ? profile.work_style.substring(0, 50) + "..." : "Not set yet"}</span></p>
+        {/* Left Column: Profile & My Workspaces */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-lg)" }}>
+          <div className="glass-panel" style={{ padding: "var(--spacing-lg)" }}>
+            <h3 style={{ marginBottom: "var(--spacing-md)" }}>Your Profile</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)", marginBottom: "var(--spacing-lg)" }}>
+              <p><strong>Reliability Score:</strong> <span style={{ color: "var(--color-success)" }}>{profile?.reliability_score || 100}</span></p>
+              <p><strong>Skills:</strong> <span style={{ color: "var(--color-text-secondary)" }}>{profile?.skills || "Not set yet"}</span></p>
+              <p><strong>Vibe:</strong> <span style={{ color: "var(--color-text-secondary)", fontSize: "0.9rem" }}>{profile?.work_style ? profile.work_style.substring(0, 50) + "..." : "Not set yet"}</span></p>
+            </div>
+            <a href="/profile" className="btn btn-outline" style={{ width: "100%", textAlign: "center" }}>
+              {profileComplete ? "Edit Profile" : "Complete Profile"}
+            </a>
           </div>
-          <a href="/profile" className="btn btn-outline" style={{ width: "100%", textAlign: "center" }}>
-            {profileComplete ? "Edit Profile" : "Complete Profile"}
-          </a>
+
+          <div className="glass-panel" style={{ padding: "var(--spacing-lg)" }}>
+            <h3 style={{ marginBottom: "var(--spacing-md)" }}>My Workspaces</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
+              {(!myProjects || myProjects.length === 0) ? (
+                 <p style={{ color: "var(--color-text-secondary)", fontSize: "0.9rem" }}>No projects yet.</p>
+              ) : (
+                myProjects.map((p: { id: string, title: string }) => (
+                  <a key={p.id} href={`/workspace/${p.id}`} className="btn btn-outline" style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", width: "100%", fontSize: "0.9rem", color: "var(--color-text-primary)", borderColor: "rgba(255,255,255,0.1)" }}>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</span>
+                    <span>→</span>
+                  </a>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Right Column: Project Feed */}
