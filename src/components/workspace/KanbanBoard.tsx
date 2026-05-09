@@ -8,6 +8,7 @@ type Task = { id: string, title: string, status: string, assigned_to: string, pr
 export default function KanbanBoard({ projectId, userId }: { projectId: string, userId: string }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [rewardMsg, setRewardMsg] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -47,6 +48,19 @@ export default function KanbanBoard({ projectId, userId }: { projectId: string, 
 
   const updateTaskStatus = async (taskId: string, newStatus: string) => {
     await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+
+    if (newStatus === 'done') {
+      // Show reward UI
+      setRewardMsg("+5 Điểm Uy Tín! 🌟");
+      setTimeout(() => setRewardMsg(null), 3000);
+
+      // Increment reliability score in profiles
+      const { data: profile } = await supabase.from('profiles').select('reliability_score').eq('id', userId).single();
+      if (profile) {
+        const newScore = (profile.reliability_score || 100) + 5;
+        await supabase.from('profiles').update({ reliability_score: newScore }).eq('id', userId);
+      }
+    }
   };
 
   const deleteTask = async (taskId: string) => {
@@ -60,7 +74,20 @@ export default function KanbanBoard({ projectId, userId }: { projectId: string, 
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+      
+      {rewardMsg && (
+        <div className="animate-fade-in" style={{
+          position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 10,
+          background: "linear-gradient(135deg, var(--color-success), #059669)", color: "white",
+          padding: "var(--spacing-md) var(--spacing-xl)", borderRadius: "var(--radius-full)",
+          fontWeight: "bold", fontSize: "1.2rem", boxShadow: "0 10px 25px rgba(16, 185, 129, 0.5)",
+          pointerEvents: "none"
+        }}>
+          {rewardMsg}
+        </div>
+      )}
+
       <form onSubmit={addTask} style={{ display: "flex", gap: "var(--spacing-sm)", marginBottom: "var(--spacing-md)" }}>
         <input 
           type="text" className="input-field" 
