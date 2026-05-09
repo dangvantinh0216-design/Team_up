@@ -12,8 +12,14 @@ type Applicant = {
   profiles: { full_name: string, skills: string };
 };
 
+type ProjectOwner = {
+  id: string;
+  full_name: string;
+};
+
 export default function MemberManager({ projectId, isOwner }: { projectId: string, isOwner: boolean }) {
   const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [ownerInfo, setOwnerInfo] = useState<ProjectOwner | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const supabase = createClient();
@@ -23,11 +29,28 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
     supabase.auth.getUser().then(({ data }) => {
       setCurrentUserId(data.user?.id || null);
     });
-    fetchApplicants();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  const fetchApplicants = async () => {
+  const fetchData = async () => {
+    setLoading(true);
+    
+    // 1. Fetch Owner Info
+    const { data: project } = await supabase
+      .from('projects')
+      .select('owner_id, profiles(full_name)')
+      .eq('id', projectId)
+      .single();
+    
+    if (project && project.profiles) {
+      setOwnerInfo({
+        id: project.owner_id,
+        full_name: (project.profiles as any).full_name
+      });
+    }
+
+    // 2. Fetch Applicants/Members
     const { data } = await supabase
       .from('project_members')
       .select('id, user_id, status, profiles(full_name, skills)')
@@ -53,7 +76,7 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
       });
 
       showToast(`Đã ${newStatus === 'approved' ? 'chấp nhận' : 'từ chối'} thành viên!`, "info");
-      fetchApplicants();
+      fetchData();
     }
   };
 
@@ -68,7 +91,7 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
 
     if (!error) {
       showToast(`Đã xóa thành viên ${fullName} khỏi dự án.`, "success");
-      fetchApplicants();
+      fetchData();
     } else {
       showToast("Lỗi khi xóa thành viên.", "error");
     }
@@ -77,7 +100,7 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
   const pending = applicants.filter(a => a.status === 'pending');
   const members = applicants.filter(a => a.status === 'approved');
 
-  if (loading) return <div>Loading applicants...</div>;
+  if (loading) return <div>Loading team...</div>;
 
   return (
     <div className="glass-panel" style={{ padding: "var(--spacing-lg)" }}>
@@ -110,8 +133,27 @@ export default function MemberManager({ projectId, isOwner }: { projectId: strin
       )}
 
       <div>
-        <h4 style={{ fontSize: "0.9rem", color: "var(--color-success)", textTransform: "uppercase" }}>Current Members ({members.length})</h4>
+        <h4 style={{ fontSize: "0.9rem", color: "var(--color-success)", textTransform: "uppercase" }}>Current Members ({members.length + (ownerInfo ? 1 : 0)})</h4>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
+          
+          {/* Always show Owner first */}
+          {ownerInfo && (
+            <div className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(99, 102, 241, 0.05)", border: "1px solid rgba(99, 102, 241, 0.2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary))", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem", color: "white" }}>
+                  {ownerInfo.full_name.charAt(0)}
+                </div>
+                <div>
+                  <Link href={`/profile/${ownerInfo.id}`} style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--color-brand-primary)" }}>
+                    {ownerInfo.full_name}
+                  </Link>
+                  <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Project Owner 👑</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Show Approved Members */}
           {members.map(a => (
             <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
