@@ -35,7 +35,8 @@ export default function ApplyButton({ projectId, userId, ownerId, initialStatus 
       setStatus('pending');
       router.refresh();
     } else {
-      showToast("Có lỗi xảy ra khi gửi đơn.", "error");
+      console.error("Apply Error:", error);
+      showToast(`Lỗi: ${error.message}`, "error");
     }
     setLoading(false);
   };
