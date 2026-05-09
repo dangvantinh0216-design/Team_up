@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/ToastContext";
 
 export default function ApplyButton({ projectId, userId, ownerId, initialStatus }: { projectId: string, userId: string, ownerId: string, initialStatus: string | null }) {
   const [status, setStatus] = useState<string | null>(initialStatus);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
   const router = useRouter();
+  const { showToast } = useToast();
 
   const handleApply = async () => {
     if (status) return;
@@ -21,17 +23,19 @@ export default function ApplyButton({ projectId, userId, ownerId, initialStatus 
     });
 
     if (!error) {
-      // Create notification for owner
       await supabase.from('notifications').insert({
         user_id: ownerId,
         actor_id: userId,
         type: 'application',
-        content: `A new user has applied to join your project!`,
+        content: `Một thành viên mới vừa ứng tuyển vào dự án của bạn!`,
         project_id: projectId
       });
 
+      showToast("Đã gửi đơn ứng tuyển thành công! 🚀", "success");
       setStatus('pending');
       router.refresh();
+    } else {
+      showToast("Có lỗi xảy ra khi gửi đơn.", "error");
     }
     setLoading(false);
   };

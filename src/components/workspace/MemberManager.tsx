@@ -2,135 +2,108 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
+import Link from "next/link";
+import { useToast } from "@/components/ui/ToastContext";
 
-type Member = { 
+type Applicant = {
   id: string;
-  user_id: string; 
-  status: string; 
-  profiles: { 
-    full_name: string; 
-    id: string;
-  } | null;
+  user_id: string;
+  status: string;
+  profiles: { full_name: string, skills: string };
 };
 
 export default function MemberManager({ projectId }: { projectId: string }) {
-  const [members, setMembers] = useState<Member[]>([]);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  const { showToast } = useToast();
 
   useEffect(() => {
-    fetchMembers();
+    fetchApplicants();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
-  const fetchMembers = async () => {
-    setLoading(true);
+  const fetchApplicants = async () => {
     const { data } = await supabase
       .from('project_members')
-      .select('*, profiles(full_name, id)')
+      .select('id, user_id, status, profiles(full_name, skills)')
       .eq('project_id', projectId);
-    if (data) setMembers(data);
+    
+    if (data) setApplicants(data as any);
     setLoading(false);
   };
 
-  const updateStatus = async (memberId: string, newStatus: string, targetUserId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
+  const handleAction = async (applicationId: string, userId: string, newStatus: 'approved' | 'rejected') => {
     const { error } = await supabase
       .from('project_members')
       .update({ status: newStatus })
-      .eq('id', memberId);
-    
+      .eq('id', applicationId);
+
     if (!error) {
-      // Create notification for the member
       await supabase.from('notifications').insert({
-        user_id: targetUserId,
-        actor_id: user.id,
+        user_id: userId,
+        actor_id: (await supabase.auth.getUser()).data.user?.id,
         type: 'approval',
-        content: newStatus === 'approved' 
-          ? `Congratulations! You have been approved to join the project.` 
-          : `Your application to join the project has been rejected.`,
+        content: `Đơn ứng tuyển của bạn đã được ${newStatus === 'approved' ? 'chấp nhận' : 'từ chối'}.`,
         project_id: projectId
       });
-      fetchMembers();
+
+      showToast(`Đã ${newStatus === 'approved' ? 'chấp nhận' : 'từ chối'} thành viên!`, "info");
+      fetchApplicants();
     }
   };
 
-  if (loading) return <div style={{ textAlign: "center", padding: "var(--spacing-lg)" }}>Loading members...</div>;
+  const pending = applicants.filter(a => a.status === 'pending');
+  const members = applicants.filter(a => a.status === 'approved');
 
-  const pending = members.filter(m => m.status === 'pending');
-  const approved = members.filter(m => m.status === 'approved');
+  if (loading) return <div>Loading applicants...</div>;
 
   return (
-    <div className="glass-panel" style={{ height: "100%", display: "flex", flexDirection: "column", padding: "var(--spacing-md)", overflowY: "auto" }}>
-      
-      <div style={{ marginBottom: "var(--spacing-lg)" }}>
-        <h4 style={{ marginBottom: "var(--spacing-md)", fontSize: "0.9rem", color: "var(--color-warning)", textTransform: "uppercase", letterSpacing: "1px" }}>
-          Pending Requests ({pending.length})
-        </h4>
+    <div className="glass-panel" style={{ padding: "var(--spacing-lg)" }}>
+      <h3 style={{ marginBottom: "var(--spacing-lg)" }}>Team Management</h3>
+
+      <div style={{ marginBottom: "var(--spacing-xl)" }}>
+        <h4 style={{ fontSize: "0.9rem", color: "var(--color-warning)", textTransform: "uppercase" }}>Applications ({pending.length})</h4>
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
-          {pending.map(m => (
-            <div key={m.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
-              <a 
-                href={`/profile/${m.user_id}`} 
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ 
-                  fontWeight: "600", 
-                  marginBottom: "var(--spacing-sm)", 
-                  display: "block", 
-                  color: "var(--color-brand-primary)",
-                  textDecoration: "underline"
-                }}
-              >
-                {m.profiles?.full_name || 'Anonymous'} ↗
-              </a>
-              <div style={{ display: "flex", gap: "var(--spacing-sm)" }}>
-                <button 
-                  onClick={() => updateStatus(m.id, 'approved', m.user_id)} 
-                  className="btn btn-primary" 
-                  style={{ flex: 1, padding: "6px", fontSize: "0.8rem" }}
-                >
-                  Approve
-                </button>
-                <button 
-                  onClick={() => updateStatus(m.id, 'rejected', m.user_id)} 
-                  className="btn btn-outline" 
-                  style={{ flex: 1, padding: "6px", fontSize: "0.8rem" }}
-                >
-                  Reject
-                </button>
+          {pending.length === 0 ? (
+            <p style={{ color: "var(--color-text-muted)", fontSize: "0.9rem" }}>No pending applications.</p>
+          ) : (
+            pending.map(a => (
+              <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "1rem", color: "var(--color-brand-primary)" }}>
+                    {a.profiles.full_name}
+                  </Link>
+                  <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>{a.profiles.skills}</p>
+                </div>
+                <div style={{ display: "flex", gap: "var(--spacing-xs)" }}>
+                  <button onClick={() => handleAction(a.id, a.user_id, 'approved')} className="btn btn-primary" style={{ padding: "4px 12px", fontSize: "0.8rem" }}>Approve</button>
+                  <button onClick={() => handleAction(a.id, a.user_id, 'rejected')} className="btn btn-outline" style={{ padding: "4px 12px", fontSize: "0.8rem", color: "var(--color-danger)" }}>Reject</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div>
+        <h4 style={{ fontSize: "0.9rem", color: "var(--color-success)", textTransform: "uppercase" }}>Current Members ({members.length})</h4>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
+          {members.map(a => (
+            <div key={a.id} className="glass-panel" style={{ padding: "var(--spacing-md)", background: "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", gap: "var(--spacing-md)" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "var(--color-brand-primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "0.8rem" }}>
+                {a.profiles.full_name.charAt(0)}
+              </div>
+              <div>
+                <Link href={`/profile/${a.user_id}`} style={{ fontWeight: "600", fontSize: "0.9rem", color: "var(--color-text-primary)" }}>
+                  {a.profiles.full_name}
+                </Link>
+                <p style={{ fontSize: "0.75rem", color: "var(--color-text-secondary)" }}>Member</p>
               </div>
             </div>
           ))}
-          {pending.length === 0 && (
-            <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", fontStyle: "italic" }}>No pending requests.</p>
-          )}
         </div>
       </div>
-
-      <hr style={{ border: "none", borderTop: "1px solid rgba(255,255,255,0.1)", margin: "var(--spacing-md) 0" }} />
-
-      <div>
-        <h4 style={{ marginBottom: "var(--spacing-md)", fontSize: "0.9rem", color: "var(--color-success)", textTransform: "uppercase", letterSpacing: "1px" }}>
-          Current Team ({approved.length})
-        </h4>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-xs)" }}>
-          {approved.map(m => (
-            <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-md)", border: "1px solid rgba(255,255,255,0.03)" }}>
-              <span style={{ fontSize: "0.9rem", fontWeight: "500" }}>{m.profiles?.full_name || 'Anonymous'}</span>
-              <span style={{ fontSize: "0.7rem", color: "var(--color-success)", fontWeight: "600", background: "rgba(16, 185, 129, 0.1)", padding: "2px 8px", borderRadius: "10px" }}>
-                Active
-              </span>
-            </div>
-          ))}
-          {approved.length === 0 && (
-            <p style={{ color: "var(--color-text-muted)", fontSize: "0.85rem", fontStyle: "italic" }}>No members yet.</p>
-          )}
-        </div>
-      </div>
-      
     </div>
   );
 }

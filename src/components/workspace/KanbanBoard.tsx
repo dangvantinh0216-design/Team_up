@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { useToast } from "@/components/ui/ToastContext";
 
 type Task = { id: string, title: string, status: string, assigned_to: string, project_id: string, created_at: string };
 
@@ -10,11 +11,11 @@ export default function KanbanBoard({ projectId, userId }: { projectId: string, 
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [rewardMsg, setRewardMsg] = useState<string | null>(null);
   const supabase = createClient();
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchTasks();
     
-    // Subscribe to real-time changes
     const channel = supabase
       .channel('schema-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `project_id=eq.${projectId}` }, () => {
@@ -37,24 +38,32 @@ export default function KanbanBoard({ projectId, userId }: { projectId: string, 
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
     
-    await supabase.from('tasks').insert({
+    const { error } = await supabase.from('tasks').insert({
       project_id: projectId,
       title: newTaskTitle,
       status: 'todo',
       assigned_to: userId
     });
-    setNewTaskTitle("");
+
+    if (!error) {
+      showToast("Công việc mới đã được thêm! 📝", "success");
+      setNewTaskTitle("");
+    }
   };
 
   const updateTaskStatus = async (taskId: string, newStatus: string) => {
-    await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+    const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', taskId);
+
+    if (error) {
+      showToast("Lỗi khi cập nhật trạng thái.", "error");
+      return;
+    }
 
     if (newStatus === 'done') {
-      // Show reward UI
       setRewardMsg("+5 Điểm Uy Tín! 🌟");
       setTimeout(() => setRewardMsg(null), 3000);
+      showToast("Tuyệt vời! Bạn đã hoàn thành công việc. 🚀", "success");
 
-      // Create notification for self
       await supabase.from('notifications').insert({
         user_id: userId,
         actor_id: userId,
@@ -63,7 +72,6 @@ export default function KanbanBoard({ projectId, userId }: { projectId: string, 
         project_id: projectId
       });
 
-      // Increment reliability score in profiles
       const { data: profile } = await supabase.from('profiles').select('reliability_score').eq('id', userId).single();
       if (profile) {
         const newScore = (profile.reliability_score || 100) + 5;
@@ -73,7 +81,12 @@ export default function KanbanBoard({ projectId, userId }: { projectId: string, 
   };
 
   const deleteTask = async (taskId: string) => {
-    await supabase.from('tasks').delete().eq('id', taskId);
+    if (confirm("Bạn có chắc chắn muốn xóa công việc này không?")) {
+      const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+      if (!error) {
+        showToast("Đã xóa công việc.", "info");
+      }
+    }
   };
 
   const columns = [

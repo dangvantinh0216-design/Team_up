@@ -33,23 +33,35 @@ export default function TeammateSearch({ profiles }: { profiles: Profile[] }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "var(--spacing-md)" }}>
         {filteredProfiles.length === 0 ? (
-          <div className="glass-panel" style={{ gridColumn: "1/-1", padding: "var(--spacing-xl)", textAlign: "center", color: "var(--color-text-muted)" }}>
-            No teammates found matching your search.
+          <div className="glass-panel" style={{ 
+            gridColumn: "1/-1", padding: "var(--spacing-2xl)", textAlign: "center", 
+            display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--spacing-md)"
+          }}>
+            <div style={{ fontSize: "3rem" }}>🔍</div>
+            <h3 style={{ margin: 0 }}>No teammates found</h3>
+            <p style={{ color: "var(--color-text-muted)", maxWidth: "400px" }}>
+              Try adjusting your search terms or look for common skills like "React" or "Python".
+            </p>
+            <button onClick={() => setSearchTerm("")} className="btn btn-outline">Clear Search</button>
           </div>
         ) : (
           filteredProfiles.map(p => (
-            <div key={p.id} className="glass-panel" style={{ padding: "var(--spacing-lg)", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+            <div key={p.id} className="glass-panel card-hover" style={{ padding: "var(--spacing-lg)", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
               <div style={{ 
                 width: "60px", height: "60px", borderRadius: "50%", 
-                background: "var(--color-brand-primary)", marginBottom: "var(--spacing-sm)",
-                display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "1.5rem"
+                background: "linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary))", 
+                marginBottom: "var(--spacing-sm)",
+                display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "1.5rem", color: "white"
               }}>
                 {p.full_name?.charAt(0)}
               </div>
               <h4 style={{ margin: "0 0 4px 0" }}>{p.full_name}</h4>
-              <p style={{ color: "var(--color-success)", fontSize: "0.8rem", fontWeight: "bold", marginBottom: "var(--spacing-sm)" }}>
+              <div style={{ 
+                fontSize: "0.75rem", fontWeight: "bold", padding: "2px 8px", borderRadius: "var(--radius-full)",
+                background: "rgba(16, 185, 129, 0.1)", color: "var(--color-success)", marginBottom: "var(--spacing-sm)"
+              }}>
                 Score: {p.reliability_score || 100}
-              </p>
+              </div>
               <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginBottom: "var(--spacing-lg)", height: "40px", overflow: "hidden" }}>
                 {p.skills || "No skills listed"}
               </p>
